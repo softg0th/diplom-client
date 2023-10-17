@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from api.schemas import ValidUser, UpdatedUser
 
-from api.logic.user_db import UserInteractions
+from api.logic.db_interactions.user_db import UserInteractions
 
 ui = UserInteractions()
 router = APIRouter(

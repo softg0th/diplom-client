@@ -11,7 +11,7 @@ engine = create_engine("postgresql://postgres:12345@127.0.0.1:5432/system_main")
 conn = engine.connect()
 metadata = MetaData()
 
-UserTab = Table('users', metadata,
+UserTab = Table('nodes', metadata,
                 Column('id', UUID, primary_key=True),
                 Column('username', String),
                 Column('password', String),
@@ -20,6 +20,10 @@ UserTab = Table('users', metadata,
 
 
 class UserInteractionsPattern(ABC):
+    @abstractmethod
+    def checkUser(self, username, password) -> bool:
+        pass
+
     @abstractmethod
     def createUser(self, user_data) -> bool:
         pass
@@ -30,6 +34,12 @@ class UserInteractionsPattern(ABC):
 
 
 class UserInteractions(UserInteractionsPattern):
+
+    def checkUser(self, username, password) -> bool:
+        pass
+        #   findUser = sqlalchemy.select(UserTab).filter(and_(UserTab.c.na))
+        #   userExists = conn.execute(findUser)
+
     def createUser(self, data) -> bool:
         try:
             data = data['user']
