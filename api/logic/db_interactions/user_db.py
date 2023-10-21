@@ -8,10 +8,9 @@ from sqlalchemy.dialects.postgresql import UUID, JSONB
 
 
 engine = create_engine("postgresql://postgres:12345@127.0.0.1:5432/system_main")
-conn = engine.connect()
 metadata = MetaData()
 
-UserTab = Table('nodes', metadata,
+UserTab = Table('users', metadata,
                 Column('id', UUID, primary_key=True),
                 Column('username', String),
                 Column('password', String),
@@ -47,16 +46,19 @@ class UserInteractions(UserInteractionsPattern):
                                                        files=[])
         except pydantic.error_wrappers.ValidationError:
             return False
-
-        conn.execute(create)
-        conn.commit()
+        with engine.connect() as conn:
+            conn.execute(create)
+            conn.commit()
         return True
 
     def updateUser(self, user_id, new_fields, field_name) -> bool:
         if field_name not in ('username', 'password'):
             return False
         findUser = sqlalchemy.select(UserTab).where(UserTab.c.id == str(user_id))
-        userExists = conn.execute(findUser)
+
+        with engine.connect() as conn:
+            userExists = conn.execute(findUser)
+
         if userExists:
             try:
                 if field_name == 'username':
@@ -66,8 +68,10 @@ class UserInteractions(UserInteractionsPattern):
                     print('password')
                     update = sqlalchemy.update(UserTab).where(UserTab.c.id == str(user_id)).values(
                         password=new_fields.field)
-                conn.execute(update)
-                conn.commit()
+
+                with engine.connect() as conn:
+                    conn.execute(update)
+                    conn.commit()
             except Exception:
                     return False
         return True

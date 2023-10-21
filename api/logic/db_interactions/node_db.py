@@ -61,15 +61,20 @@ class NodeInteractions(NodeInteractionsPattern):
         except pydantic.error_wrappers.ValidationError:
             return False
 
-        conn.execute(create)
-        conn.commit()
+        with engine.connect() as conn:
+            conn.execute(create)
+            conn.commit()
+
         return True
 
     def deleteNode(self, node_id):
         try:
             delete = sqlalchemy.delete(NodeTab).where(NodeTab.c.id == str(node_id))
-            conn.execute(delete)
-            conn.commit()
+
+            with engine.connect() as conn:
+                conn.execute(delete)
+                conn.commit()
+
         except Exception:
             return False
         return True
