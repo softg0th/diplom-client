@@ -1,0 +1,21 @@
+services:
+
+  db:
+    image: postgres:14.1-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_NAME=system_main
+      - POSTGRES_DB=system_main
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=12345
+
+  app:
+    build: ./backend
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./code:/backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
