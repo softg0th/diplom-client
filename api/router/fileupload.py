@@ -22,7 +22,7 @@ def upload(user_id, file: UploadFile = File()):
         filename = Path(file.filename)
         data = fi.create_file(user_id, uuid.uuid4(), filename)
         return data
-    raise HTTPException
+    raise HTTPException(status_code=500, detail='Nodes broken!')
 
 @router.delete('/delete/')
 def delete(user_id, file_id):
