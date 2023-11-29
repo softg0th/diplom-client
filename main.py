@@ -6,6 +6,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from api.router import registration
 from api.router import node
+from api.router import fileupload
 from tasks.availability import ping_nodes
 
 
@@ -17,7 +18,7 @@ def get_app() -> FastAPI:
 app = get_app()
 app.include_router(registration.router)
 app.include_router(node.router)
-
+app.include_router(fileupload.router)
 
 async def ping_task() -> None:
     await ping_nodes()

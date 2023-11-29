@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import UUID, JSONB
 
 engine = create_engine("postgresql://postgres:12345@127.0.0.1:5432/system_main")
 metadata = MetaData()
-
+conn = engine.connect()
 UserTab = Table('users', metadata,
                 Column('id', UUID, primary_key=True),
                 Column('username', String),
@@ -19,9 +19,6 @@ UserTab = Table('users', metadata,
 
 
 class UserInteractionsPattern(ABC):
-    @abstractmethod
-    def checkUser(self, username, password) -> bool:
-        pass
 
     @abstractmethod
     def createUser(self, user_data) -> bool:
@@ -30,6 +27,21 @@ class UserInteractionsPattern(ABC):
     @abstractmethod
     def updateUser(self, user_id, new_fields, field_name) -> bool:
         pass
+
+
+class UsersFinderTemplate(ABC):
+    @abstractmethod
+    def isUserExist(self, user_id) -> bool:
+        pass
+
+
+class UsersFinder(UsersFinderTemplate):
+    def isUserExist(self, user_id) -> bool:
+        findUser = sqlalchemy.select(UserTab).where(UserTab.c.id == str(user_id))
+        got_nodes = conn.execute(findUser).fetchall()
+        if len(got_nodes) == 0:
+            return False
+        return True
 
 
 class UserInteractions(UserInteractionsPattern):
