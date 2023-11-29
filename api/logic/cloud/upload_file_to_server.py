@@ -1,8 +1,4 @@
-import base64
-import io
 import os
-import shutil
-from pathlib import Path
 
 import httpx
 
@@ -14,7 +10,6 @@ def server_choice(file_size) -> []:
     available_right_now = []
 
     for node in nodes:
-        print(node)
         check_space = httpx.get(f'http://{node["ip"]}:10000/info/space')
         if check_space.status_code == 200:
             available_right_now.append((node['ip'], check_space.text))
@@ -27,19 +22,17 @@ def server_choice(file_size) -> []:
 
 def upload_to_server(server_ip, user_id, file) -> bool:
     server_url = f'http://{server_ip}:10000/files/files'
-    print('SERVERURL', server_url)
     with open(file, 'rb') as target_file:
         file_data = target_file.read()
     files = {'file': ('example.txt', file_data)}
     response = httpx.post(f'{server_url}?user={user_id}', files=files)
-    print(response.text)
     if response.status_code != 200:
         return False
     return True
 
 
 def temp_save(file):
-    pwd = "D:/diploma/diplom-client/huh/"
+    pwd = "D:/diploma/diplom-client/temp/"
     content = file.file.read()
     pat = f'{pwd}{file.filename}'
     with open(pat, 'wb') as temp_file:

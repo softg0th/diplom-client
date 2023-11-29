@@ -15,6 +15,12 @@ router = APIRouter(
 fi = FileInteractions()
 
 
+@router.get('/get/')
+def get(user_id):
+    data = fi.get_all_files(user_id)
+    return data
+
+
 @router.post('/upload/')
 def upload(user_id, file: UploadFile = File()):
     output = executor(user_id, file)
@@ -23,6 +29,7 @@ def upload(user_id, file: UploadFile = File()):
         data = fi.create_file(user_id, uuid.uuid4(), filename)
         return data
     raise HTTPException(status_code=500, detail='Nodes broken!')
+
 
 @router.delete('/delete/')
 def delete(user_id, file_id):

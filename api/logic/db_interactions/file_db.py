@@ -43,7 +43,6 @@ class FileInteractionsPattern(ABC):
 class FileInteractions(FileInteractionsPattern):
     def get_all_files(self, user_id) -> List:
         if uf.isUserExist(user_id):
-            print('exist')
             findFile = sqlalchemy.select(FileTab).where(FileTab.c.user == str(user_id))
             foundFiles = conn.execute(findFile).fetchall()
             print('query')
@@ -52,7 +51,6 @@ class FileInteractions(FileInteractionsPattern):
             for row in foundFiles:
                 row_dct = {'verbose_name': row[3]}
                 files.append(row_dct)
-            print('files')
             return files
         return []
 
