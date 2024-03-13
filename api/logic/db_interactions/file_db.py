@@ -1,12 +1,15 @@
+import hashlib
 from abc import abstractmethod, ABC
 from typing import List
 from uuid import UUID
 
+import reedsolo
 import sqlalchemy
 from sqlalchemy import create_engine, MetaData, String, ForeignKey
 from sqlalchemy.testing.schema import Table, Column
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
+from api.logic.cloud.load_file_from_server import check_file_nodes
 from api.logic.db_interactions.user_db import UsersFinder
 
 engine = create_engine("postgresql://postgres:12345@127.0.0.1:5432/system_main")
@@ -39,6 +42,27 @@ class FileInteractionsPattern(ABC):
     def delete_file(self, user_id, file_id) -> List:
         pass
 
+    @abstractmethod
+    def get_file_nodes(self, user_id, file_id) -> List:
+        pass
+
+    @abstractmethod
+    def load_file(self, user_id, file_id, file_name):
+        pass
+
+
+def decode(encoded_text, n, original_length=None):
+    rsc = reedsolo.RSCodec(n)
+    try:
+        decoded_bytes = rsc.decode(encoded_text)
+        if original_length:
+            primer = decoded_bytes[0][-original_length:]
+            print(primer.decode('utf-8'))
+            return bytes(primer)
+        return decoded_bytes[0]
+    except reedsolo.ReedSolomonError:
+        return None
+
 
 class FileInteractions(FileInteractionsPattern):
     def get_all_files(self, user_id) -> List:
@@ -58,7 +82,7 @@ class FileInteractions(FileInteractionsPattern):
         if uf.isUserExist(user_id):
             print('exist')
             create = sqlalchemy.insert(FileTab).values(id=str(file_id), user=str(user_id), nodes=[],
-                                                           verbose_name=str(verbose_name))
+                                                       verbose_name=str(verbose_name))
             with engine.connect() as conn:
                 conn.execute(create)
                 conn.commit()
@@ -86,3 +110,25 @@ class FileInteractions(FileInteractionsPattern):
                 conn.commit()
             return [user_id, file_id]
         return []
+
+    def get_file_nodes(self, user_id, file_id) -> List:
+        if uf.isUserExist(user_id):
+            file_nodes = sqlalchemy.select(FileTab).where(FileTab.c.id == str(file_id))
+            found_file_nodes = conn.execute(file_nodes).fetchall()
+            return [found_file_nodes[2]]
+
+    def load_file(self, user_id, file_id, file_name):
+        fi = FileInteractions()
+        nodes = fi.get_file_nodes(user_id, file_id)
+        file_parts = check_file_nodes(user_id, file_id, nodes)
+        all_len = 0
+        pwd = "D:/diploma/diplom-client/temp/"
+        with open(f"{pwd}/filename", 'w') as f:
+            for part in file_parts:
+                if all_len < 1000:
+                    part = decode(part, all_len, len(part) + 2)
+                all_len += len(part)
+                f.write(part)
+
+        file_pwd = f"{pwd}/{file_name}"
+        return file_pwd

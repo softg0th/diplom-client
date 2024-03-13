@@ -27,3 +27,7 @@ def update_user(user_id: UUID, new_data: UpdatedUser, field: str):
     return JSONResponse(content={"message": "Something broken!"}, status_code=500)
 
 
+@router.post('/auth')
+def auth_user(user: ValidUser):
+    pass
+

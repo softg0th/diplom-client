@@ -10,6 +10,9 @@ class ValidUser(BaseModel):
     password: str = Field(description='user password')
     files: list
 
+class UserAuth(BaseModel):
+    username: str = Field(description='user name')
+    password: str = Field(description='user password')
 
 class UpdatedUser(BaseModel):
     field: str = Field(description='user password')
