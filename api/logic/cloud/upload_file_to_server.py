@@ -1,8 +1,16 @@
+import hashlib
 import os
 
 import httpx
+import reedsolo
 
 from api.logic.db_interactions.node_db import nodes_select
+
+
+def encode(text, n):
+    rsc = reedsolo.RSCodec(n)
+    encoded_bytes = rsc.encode(text)
+    return encoded_bytes
 
 
 def server_choice(file_size) -> []:
@@ -34,20 +42,30 @@ def upload_to_server(server_ip, user_id, file) -> bool:
 def temp_save(file):
     pwd = "D:/diploma/diplom-client/temp/"
     content = file.file.read()
-    pat = f'{pwd}{file.filename}'
-    with open(pat, 'wb') as temp_file:
-        temp_file.write(content)
-    file_size = os.stat(f'{pwd}{file.filename}')
-    return file_size, pat
+    file_length = len(content) // 3
+    with open('D:\diploma\diplom-client\hash.txt') as f:
+        f.write(hashlib.md5(encode(content, file_length)).hexdigest())
+    file_split_datas = [encode(content[:file_length], file_length),
+                        encode(content[file_length:2 * file_length], file_length),
+                        encode(file_length[2 * file_length:], file_length)]
+    paths_files = []
+    for it in range(3):
+        pat = f'{pwd}{file.filename}.{it}'
+        with open(pat, 'wb') as temp_file:
+            temp_file.write(file_split_datas[it])
+        paths_files.append(pat)
+    file_size = os.stat(f'{pwd}{file.filename}.1')
+    return file_size, paths_files
 
 
-def executor(user_id, file) -> bool:
-    size, path = temp_save(file)
+def executor(user_id, file):
+    size, path_files = temp_save(file)
     server, space = server_choice(size)
+
     if server is []:
         return False
-    final = upload_to_server(server, user_id, path)
-    if final:
-        return True
-    return False
 
+    for pat in path_files:
+        upload_to_server(server, user_id, pat)
+
+    return True

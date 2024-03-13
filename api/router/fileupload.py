@@ -3,6 +3,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, UploadFile, File
 from fastapi.exceptions import HTTPException
+from fastapi.responses import FileResponse
 
 from api.logic.db_interactions.file_db import FileInteractions
 from api.logic.cloud.upload_file_to_server import executor
@@ -41,3 +42,9 @@ def delete(user_id, file_id):
 def update(user_id, file_id, verbose_name):
     data = fi.update_file(user_id, file_id, verbose_name)
     return data
+
+
+@router.get('/load/')
+def load(user_id, file_id, file_name):
+    data = fi.load_file(user_id, file_id, file_name)
+    return FileResponse(data)
