@@ -3,6 +3,7 @@ import os
 
 import httpx
 import reedsolo
+import requests
 
 from api.logic.db_interactions.node_db import nodes_select
 
@@ -13,27 +14,28 @@ def encode(text, n):
     return encoded_bytes
 
 
-def server_choice(file_size) -> []:
+def server_choice() -> []:
     nodes = nodes_select()
     available_right_now = []
 
     for node in nodes:
-        check_space = httpx.get(f'http://{node["ip"]}:10000/info/space')
+        check_space = requests.get(f'http://{node["ip"]}/info/space')
+        print(node['ip'])
         if check_space.status_code == 200:
-            available_right_now.append((node['ip'], check_space.text))
+            available_right_now.append(node['ip'])
 
     if len(available_right_now) != 0:
         available_right_now = sorted(available_right_now, key=lambda memory: memory[1])
-        return available_right_now[0]
+        return available_right_now
     return []
 
 
 def upload_to_server(server_ip, user_id, file) -> bool:
-    server_url = f'http://{server_ip}:10000/files/files'
+    server_url = f'http://{server_ip}/files/files'
     with open(file, 'rb') as target_file:
         file_data = target_file.read()
-    files = {'file': ('example.txt', file_data)}
-    response = httpx.post(f'{server_url}?user={user_id}', files=files)
+    files = {'file': (f'{file}', file_data)}
+    response = requests.post(f'{server_url}?user={user_id}', files=files)
     if response.status_code != 200:
         return False
     return True
@@ -47,11 +49,11 @@ def temp_save(file):
     if len(content) < 1000:
         file_split_datas = [encode(content[:file_length], file_length),
                             encode(content[file_length:2 * file_length], file_length),
-                            encode(file_length[2 * file_length:], file_length)]
+                            encode(content[2 * file_length:], file_length)]
     else:
         file_split_datas = [content[:file_length],
                             content[file_length:2 * file_length],
-                            file_length[2 * file_length:]]
+                            content[2 * file_length:]]
     paths_files = []
     for it in range(3):
         pat = f'{pwd}{file.filename}.{it}'
@@ -64,12 +66,12 @@ def temp_save(file):
 
 def executor(user_id, file):
     size, path_files = temp_save(file)
-    server, space = server_choice(size)
+    server = server_choice()
 
     if server is []:
         return False
 
-    for pat in path_files:
-        upload_to_server(server, user_id, pat)
+    for three in range(3):
+        upload_to_server(server[three], user_id, path_files[three])
 
     return True
