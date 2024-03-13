@@ -43,11 +43,15 @@ def temp_save(file):
     pwd = "D:/diploma/diplom-client/temp/"
     content = file.file.read()
     file_length = len(content) // 3
-    with open('D:\diploma\diplom-client\hash.txt') as f:
-        f.write(hashlib.md5(encode(content, file_length)).hexdigest())
-    file_split_datas = [encode(content[:file_length], file_length),
-                        encode(content[file_length:2 * file_length], file_length),
-                        encode(file_length[2 * file_length:], file_length)]
+
+    if len(content) < 1000:
+        file_split_datas = [encode(content[:file_length], file_length),
+                            encode(content[file_length:2 * file_length], file_length),
+                            encode(file_length[2 * file_length:], file_length)]
+    else:
+        file_split_datas = [content[:file_length],
+                            content[file_length:2 * file_length],
+                            file_length[2 * file_length:]]
     paths_files = []
     for it in range(3):
         pat = f'{pwd}{file.filename}.{it}'
