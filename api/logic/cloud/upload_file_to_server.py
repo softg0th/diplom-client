@@ -1,10 +1,12 @@
 import hashlib
 import os
+from pathlib import Path
 
 import httpx
 import reedsolo
 import requests
 
+from api.logic.db_interactions.file_db import FileInteractions
 from api.logic.db_interactions.node_db import nodes_select
 
 
@@ -20,7 +22,6 @@ def server_choice() -> []:
 
     for node in nodes:
         check_space = requests.get(f'http://{node["ip"]}/info/space')
-        print(node['ip'])
         if check_space.status_code == 200:
             available_right_now.append(node['ip'])
 
@@ -30,8 +31,10 @@ def server_choice() -> []:
     return []
 
 
-def upload_to_server(server_ip, user_id, file) -> bool:
+def upload_to_server(server_ip, user_id, file, file_id) -> bool:
     server_url = f'http://{server_ip}/files/files'
+    fi = FileInteractions()
+    fi.append_nodes(user_id, file_id, server_ip)
     with open(file, 'rb') as target_file:
         file_data = target_file.read()
     files = {'file': (f'{file}', file_data)}
@@ -64,14 +67,17 @@ def temp_save(file):
     return file_size, paths_files
 
 
-def executor(user_id, file):
+def executor(user_id, file, file_id):
     size, path_files = temp_save(file)
+    filename = Path(file.filename)
+    fi = FileInteractions()
+    fi.create_file(user_id, file_id, filename)
     server = server_choice()
 
     if server is []:
         return False
 
     for three in range(3):
-        upload_to_server(server[three], user_id, path_files[three])
+        upload_to_server(server[three], user_id, path_files[three], file_id)
 
     return True
