@@ -24,11 +24,10 @@ def get(user_id):
 
 @router.post('/upload/')
 def upload(user_id, file: UploadFile = File()):
-    output = executor(user_id, file)
+    file_id = uuid.uuid4()
+    output = executor(user_id, file, file_id)
     if output:
-        filename = Path(file.filename)
-        data = fi.create_file(user_id, uuid.uuid4(), filename)
-        return data
+        return HTTPException(status_code=200, detail='ok')
     raise HTTPException(status_code=500, detail='Nodes broken!')
 
 
@@ -46,5 +45,5 @@ def update(user_id, file_id, verbose_name):
 
 @router.get('/load/')
 def load(user_id, file_id, file_name):
-    data = fi.load_file(user_id, file_id, file_name)
-    return FileResponse(data)
+    data, file = fi.load_file(user_id, file_id, file_name)
+    return FileResponse(data, filename=file)
